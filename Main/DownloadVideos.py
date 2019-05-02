@@ -2,7 +2,9 @@ import requests
 import os.path
 from os import path
 import threading
+from DatabaseHelper import Mongo
 filepath='F:/ptv_videos/'
+is_downloaded=False
 def download_file_from_google_drive(id, destination):
     URL = "https://docs.google.com/uc?export=download"
 
@@ -32,26 +34,48 @@ def save_response_content(response, destination):
             if chunk: # filter out keep-alive new chunks
                 f.write(chunk)
     print('download success')
-def get_size(start_path):
+    globals()['is_downloaded']=True
+
+def get_size_of_file_in_storage(start_path):
     b = os.path.getsize(start_path)
     return b
 
 
 
-def check_videos_existing_or_not(post):
-        print(filepath+str(post.VL_DriveFileId+'.'+post.VL_FileMimeType))
-        print ("file exist:"+str(path.exists(filepath+str(post.VL_DriveFileId+'.'+post.VL_FileMimeType))))
-        print(str(post.VL_DriveFileId+'.'+post.VL_FileMimeType))
-        if (path.exists(filepath+str(post.VL_DriveFileId+'.'+post.VL_FileMimeType))):
-            size=str (get_size(filepath+str(post.VL_DriveFileId+'.'+post.VL_FileMimeType)))
-            if size == post.VL_Size:
-                print('size equal')
+def check_videos_existing_or_not(model):
+
+        '''print(filepath + str(model.VL_DriveFileId + '.' + model.VL_FileMimeType))
+        #print ("file exist:" + str(path.exists(filepath + str(model.VL_DriveFileId + '.' + model.VL_FileMimeType))))
+        print(str(model.VL_DriveFileId + '.' + model.VL_FileMimeType))'''
+        if (path.exists(filepath+str(model.VL_DriveFileId + '.' + model.VL_FileMimeType))):
+            size=str (get_size_of_file_in_storage(filepath + str(model.VL_DriveFileId + '.' + model.VL_FileMimeType)))
+            if size == model.VL_Size:
+                #print('size equal')
+
+                add_camp_to_Advertisement_List(model)
             else:
                 print('size not equal')
-                os.remove(filepath+str(post.VL_DriveFileId+'.'+post.VL_FileMimeType))
-                print(os)
+
+                os.remove(filepath + str(model.VL_DriveFileId + '.' + model.VL_FileMimeType))
+                download_file_from_google_drive(model.VL_DriveFileId,
+                                                filepath + model.VL_DriveFileId + '.' + model.VL_FileMimeType)
+                # t2=threading.Thread(target=download_file_from_google_drive, args=(model.VL_DriveFileId, filepath + model.VL_DriveFileId + '.' + model.VL_FileMimeType,))
+                # t2.start()
+                # t2.join()
+                if is_downloaded:
+                    add_camp_to_Advertisement_List(model)
+
         else:
-            t1 = threading.Thread(target=download_file_from_google_drive, args=(post.VL_DriveFileId,filepath+post.VL_DriveFileId+'.'+post.VL_FileMimeType,))
-            #download_file_from_google_drive(post.VL_DriveFileId,filepath+post.VL_DriveFileId+'.'+post.VL_FileMimeType)
-            t1.start()
-            t1.join()
+            #t1 = threading.Thread(target=download_file_from_google_drive, args=(model.VL_DriveFileId, filepath + model.VL_DriveFileId + '.' + model.VL_FileMimeType,))
+            download_file_from_google_drive(model.VL_DriveFileId,filepath+model.VL_DriveFileId+'.'+model.VL_FileMimeType)
+            # t1.start()
+            # t1.join()
+            print(is_downloaded)
+            if is_downloaded:
+                add_camp_to_Advertisement_List(model)
+
+def add_camp_to_Advertisement_List(model):
+    mongo=Mongo.Database()
+    mongo.insert_to_Advertisement_List(collection='Advertisement_List',data=model)
+
+

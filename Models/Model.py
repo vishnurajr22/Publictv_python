@@ -1,16 +1,22 @@
 import uuid
+from threading import *
+from Advertisement import PlayAdvts
 from Main import DownloadVideos
 from DatabaseHelper import Mongo
+from Models import Model
+from Extras import CommonDataArea
 import requests
 import  json
-
-class post(object):
+import time
+import threading
+class post(Thread):
+    flag=False
     def __init__(self, id=None,VideoDeviceMapId=None,VL_VideoID=None,VL_VideoName=None,
                  VL_Size=None,VL_DriveFileId=None ,VL_VideoType=None,VL_Description=None,
                  VL_Status=None,VL_FileMimeType=None,VL_FileTags=None,
                  VL_UploadedDate=None,VDL_Impressions=None,VDL_TotalImpression=None,
-                 VDL_EndDate=None,CampaignId=None):
-
+                 VDL_EndDate=None,CampaignId=None,video_status=None):
+            super(post, self).__init__()
             self.ids = id
 
             self.VideoDeviceMapId=VideoDeviceMapId
@@ -28,6 +34,7 @@ class post(object):
             self.VDL_TotalImpression=VDL_TotalImpression
             self.VDL_EndDate=VDL_EndDate
             self.CampaignId=CampaignId
+            self.video_status=video_status
 
 
 
@@ -37,8 +44,10 @@ class post(object):
             return self.ids
 
     @staticmethod
-    def save_to_video_collection():
-
+    def run():
+#video download starts here
+        while True:
+            flag=False
             data=post.get_video_api()
             pdata=json.loads(data.text)
             for d in pdata:
@@ -60,11 +69,15 @@ class post(object):
                 p.VDL_TotalImpression=d['VDL_TotalImpression']
                 p.VDL_EndDate=d['VDL_EndDate']
                 p.CampaignId=d['CampaignId']
+                p.video_status='0'
 
                 down=DownloadVideos
                 down.check_videos_existing_or_not(p)
                 #print(p.VL_DriveFileId)
                 #Mongo.insert(collection='video',data=d)
+            time.sleep(60)
+
+            print("i'm a thread" + CommonDataArea.CommonDataArea().date_with_time())
 
 
 
@@ -81,4 +94,3 @@ class post(object):
             for data in data:
 
                 print(data["VL_FileTags"])
-
