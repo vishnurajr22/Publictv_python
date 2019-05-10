@@ -89,7 +89,7 @@ class Advt_player:
             End_date = d["VDL_EndDate"]
             Total_imp = int(d['VDL_TotalImpression'])
             video_status = d['video_status']
-            print(End_date)
+            # print(End_date)
 
             dateTime1 = datetime.strptime(End_date, "%Y-%m-%d")
 

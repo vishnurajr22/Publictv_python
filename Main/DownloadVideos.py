@@ -3,6 +3,7 @@ import os.path
 from os import path
 import threading
 from DatabaseHelper import Mongo
+from Extras import CommonDataArea
 filepath='F:/ptv_videos/'
 is_downloaded=False
 def download_file_from_google_drive(id, destination):
@@ -43,6 +44,7 @@ def get_size_of_file_in_storage(start_path):
 
 
 def check_videos_existing_or_not(model):
+        db=Mongo.Database()
 
         '''print(filepath + str(model.VL_DriveFileId + '.' + model.VL_FileMimeType))
         #print ("file exist:" + str(path.exists(filepath + str(model.VL_DriveFileId + '.' + model.VL_FileMimeType))))
@@ -50,9 +52,10 @@ def check_videos_existing_or_not(model):
         if (path.exists(filepath+str(model.VL_DriveFileId + '.' + model.VL_FileMimeType))):
             size=str (get_size_of_file_in_storage(filepath + str(model.VL_DriveFileId + '.' + model.VL_FileMimeType)))
             if size == model.VL_Size:
-                #print('size equal')
-
-                add_camp_to_Advertisement_List(model)
+                print('size equal')
+                if db.check_for_same_mapid(model.VideoDeviceMapId):
+                    print(db.check_for_same_mapid(model.VideoDeviceMapId))
+                    add_camp_to_Advertisement_List(model)
             else:
                 print('size not equal')
 
@@ -63,7 +66,9 @@ def check_videos_existing_or_not(model):
                 # t2.start()
                 # t2.join()
                 if is_downloaded:
-                    add_camp_to_Advertisement_List(model)
+                    if db.check_for_same_mapid(model.VideoDeviceMapId):
+                        print(db.check_for_same_mapid(model.VideoDeviceMapId))
+                        add_camp_to_Advertisement_List(model)
 
         else:
             #t1 = threading.Thread(target=download_file_from_google_drive, args=(model.VL_DriveFileId, filepath + model.VL_DriveFileId + '.' + model.VL_FileMimeType,))
@@ -72,10 +77,17 @@ def check_videos_existing_or_not(model):
             # t1.join()
             print(is_downloaded)
             if is_downloaded:
-                add_camp_to_Advertisement_List(model)
+                if db.check_for_same_mapid(model.VideoDeviceMapId):
+                    print(db.check_for_same_mapid(model.VideoDeviceMapId))
+                    add_camp_to_Advertisement_List(model)
 
 def add_camp_to_Advertisement_List(model):
     mongo=Mongo.Database()
-    mongo.insert_to_Advertisement_List(collection='Advertisement_List',data=model)
+    date=CommonDataArea.CommonDataArea.curent_time()
+    # if model["video_status"]==date:
+    try:
+        mongo.insert_to_Advertisement_List(collection='Advertisement_List',data=model)
+    except Exception as e:
+        print(e)
 
 

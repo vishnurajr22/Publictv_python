@@ -1,3 +1,4 @@
+import sched
 import uuid
 from threading import *
 from Advertisement import PlayAdvts
@@ -8,8 +9,9 @@ from Extras import CommonDataArea
 import requests
 import  json
 import time
+
 import threading
-class post(Thread):
+class post(threading.Thread):
     flag=False
     def __init__(self, id=None,VideoDeviceMapId=None,VL_VideoID=None,VL_VideoName=None,
                  VL_Size=None,VL_DriveFileId=None ,VL_VideoType=None,VL_Description=None,
@@ -46,7 +48,7 @@ class post(Thread):
     @staticmethod
     def run():
 #video download starts here
-        while True:
+         while True:
             flag=False
             data=post.get_video_api()
             pdata=json.loads(data.text)
@@ -69,7 +71,7 @@ class post(Thread):
                 p.VDL_TotalImpression=d['VDL_TotalImpression']
                 p.VDL_EndDate=d['VDL_EndDate']
                 p.CampaignId=d['CampaignId']
-                p.video_status='0'
+                p.video_status='22/25/0'
 
                 down=DownloadVideos
                 down.check_videos_existing_or_not(p)
@@ -77,8 +79,8 @@ class post(Thread):
                 #Mongo.insert(collection='video',data=d)
             time.sleep(60)
 
-            print("i'm a thread" + CommonDataArea.CommonDataArea().date_with_time())
 
+            print("i'm a thread" + CommonDataArea.CommonDataArea().date_with_time())
 
 
     @staticmethod
@@ -89,8 +91,8 @@ class post(Thread):
                # print(data)
                 return response
 
-    def videos(id):
-            data=Mongo.findall(collection='video',query={'VL_VideoID':id})
-            for data in data:
-
-                print(data["VL_FileTags"])
+    # def videos(id):
+    #         data=Mongo.findall(collection='video',query={'VL_VideoID':id})
+    #         for data in data:
+    #
+    #             print(data["VL_FileTags"])
